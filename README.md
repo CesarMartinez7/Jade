@@ -1,37 +1,32 @@
-# Rsbuild project
+# <p align="center">Jade 💎 </p>
 
-## Setup
 
-Install the dependencies:
 
-```bash
-pnpm install
-```
 
-## Get started
+![ReactMatter](./src/public/images/jade.png)
 
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
+**Jade** es una herramienta sencilla pero poderosa diseñada para:
 
-```bash
-pnpm dev
-```
+- Formatear JSON de forma clara y legible.
+- Generar **interfaces de TypeScript** al instante.
+- Decodificar **JSON Web Tokens** (JWT).
+- Comparar JSON y texto.
+- Generar tablas dinámicas.
+- Crear tipados en TypeScript.
+  
+Todo **sin necesidad de conectarse a un backend** ni realizar consumos externos.
 
-Build the app for production:
+Bajo la filosofía **"lo que es del frontend, se queda en el frontend"**, **ReactMatter** apuesta por la eficiencia, rapidez y simplicidad.
 
-```bash
-pnpm build
-```
+## 🚀 ¿Qué ofrece ReactMatter?
 
-Preview the production build locally:
+- ✨ **Formateo de JSON** con estilos modernos y fácil lectura.
+- ⚙️ **Generación automática** de interfaces TypeScript basadas en el JSON ingresado.
+- 🧠 **Interfaz intuitiva**, pensada para la experiencia del desarrollador.
+- 📦 **Carga de archivos JSON** *(en desarrollo)*.
 
-```bash
-pnpm preview
-```
+---
 
-## Learn more
+💡 **Ideal para** desarrolladores que trabajan con APIs, mockups o estructuras de datos complejas.
 
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
-# Jade
+> Construido con **React**, su nombre refleja la unión de potencia y practicidad: React + herramientas que realmente importan.
