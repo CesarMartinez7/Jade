@@ -2,7 +2,7 @@ import { Icon } from '@iconify/react/dist/iconify.js';
 import bolt from '@iconify-icons/tabler/bolt';
 import { AnimatePresence, motion } from 'motion/react';
 import type React from 'react';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import highlightCode from './higlight-code';
 import LazyListItem from '../lazylist.tsx';
@@ -31,6 +31,25 @@ const CodeEditor = ({
   const [isOpenBar, setIsOpenBar] = useState<boolean>(false);
   const [code, setCode] = useState(value);
 
+  // A debounced "displayCode" used for heavy work (highlighting, line counts)
+  const [displayCode, setDisplayCode] = useState(code);
+  const debounceTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    // Debounce updates to displayCode to avoid expensive recalculations on every keystroke
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      setDisplayCode(code);
+      debounceTimerRef.current = null;
+    }, 60); // 60ms works well for editing responsiveness vs CPU usage
+
+    return () => {
+      if (debounceTimerRef.current) window.clearTimeout(debounceTimerRef.current);
+    };
+  }, [code]);
+
   // --------------------------------------- Custom Hooks -------------------------------------
   const { JsonSchema, minifyJson } = useJsonHook({
     code: code,
@@ -43,10 +62,51 @@ const CodeEditor = ({
   });
 
   const lineCount = useMemo(() => {
-    return code.split('\n').length;
-  }, [code]);
+    // Use the debounced displayCode to avoid repeating split on every keystroke
+    return displayCode.split('\n').length;
+  }, [displayCode]);
 
-  // Efecttos
+  // Memoize highlighted HTML so we don't re-highlight on every keystroke
+  const highlightHtml = useMemo(() => highlightCode(displayCode, language), [
+    displayCode,
+    language,
+  ]);
+
+  // Validate JSON (memoized) — uses the debounced displayCode to avoid frequent parsing
+  const isValidJson = useMemo(() => {
+    if (language !== 'json') return false;
+    try {
+      JSON.parse(displayCode);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [displayCode, language]);
+
+  // Global keyboard listener (moved below so callbacks are defined first)
+
+  const HandlersMinifyBody = useCallback(() => {
+    if (language === 'json') {
+      return minifyJson();
+    }
+
+    if (language === 'xml') {
+      return minifyXml();
+    }
+
+    return toast.error(
+      'Es diferente a json por lo ucal no se se puede minifycar',
+    );
+  }, [language, minifyJson, minifyXml]);
+
+  const HandlersIdentarBody = useCallback(() => {
+    if (language === 'json') return JsonSchema();
+
+    if (language === 'xml') {
+      return XmlScheme();
+    }
+  }, [language, JsonSchema, XmlScheme]);
+
   useEffect(() => {
     textareaRef.current?.focus();
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -68,35 +128,13 @@ const CodeEditor = ({
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, []);
+  }, [HandlersIdentarBody]);
 
-  const HandlersMinifyBody = () => {
-    if (language === 'json') {
-      return minifyJson();
-    }
-
-    if (language === 'xml') {
-      return minifyXml();
-    }
-
-    return toast.error(
-      'Es diferente a json por lo ucal no se se puede minifycar',
-    );
-  };
-
-  const HandlersIdentarBody = () => {
-    if (language === 'json') return JsonSchema();
-
-    if (language === 'xml') {
-      return XmlScheme();
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setCode(newValue);
     onChange?.(newValue);
-  };
+  }, [onChange]);
 
   const handleScroll = () => {
     if (
@@ -136,20 +174,21 @@ const CodeEditor = ({
     setIsOpenBar((prev) => !prev);
   };
 
-  const handleCLickReplaceTextFirst = () => {
+  const handleCLickReplaceTextFirst = useCallback(() => {
     const from = inputRefTextOld.current?.value || '';
     const to = inputRefTextNew.current?.value || '';
 
     if (!from) return toast.error('Ingresa un valor a buscar');
 
-    if (!value?.includes(from)) {
+    if (!code?.includes(from)) {
       return toast.error('El valor a buscar no se encuentra en el texto');
     }
 
-    const result = value?.replace(from, to);
+    const result = code.replace(from, to);
     setCode(result);
+    onChange?.(result);
     toast.success('Reemplazo realizado');
-  };
+  }, [code, onChange]);
 
   const lineNumberElements = useMemo(
     () =>
@@ -161,19 +200,23 @@ const CodeEditor = ({
     [lineCount],
   );
 
-  const handleCLickReplaceText = () => {
+  const handleCLickReplaceText = useCallback(() => {
     const from = inputRefTextOld.current?.value || '';
     const to = inputRefTextNew.current?.value || '';
 
-    if (!value?.includes(from)) {
+    if (!from) return toast.error('Ingresa un valor a buscar');
+    if (!code?.includes(from)) {
       return toast.error('El valor a buscar no se encuentra en el texto');
     }
 
-    if (!from) return toast.error('Ingresa un valor a buscar');
-    const result = value?.replaceAll(from, to);
+    const result = (code as string).replaceAll
+      ? (code as string).replaceAll(from, to)
+      : (code as string).split(from).join(to);
+
     setCode(result);
+    onChange?.(result);
     toast.success('Reemplazo realizado');
-  };
+  }, [code, onChange]);
 
   return (
     <main className="border rounded-xl overflow-hidden border-zinc-800 relative">
@@ -256,7 +299,7 @@ const CodeEditor = ({
               ref={highlightRef}
               className="absolute  inset-0 p-2 text-sm font-mono leading-6 pointer-events-none overflow-hidden whitespace-pre-wrap break-words  text-[#d4d4d4]"
               dangerouslySetInnerHTML={{
-                __html: highlightCode(code, language),
+                __html: /* memoized to avoid re-highlighting on every keystroke */ highlightHtml,
               }}
             />
           </LazyListItem>
@@ -314,16 +357,11 @@ const CodeEditor = ({
 
         <div className="flex items-center gap-2">
           <span className="text-green-400">
-            {(() => {
-              try {
-                JSON.parse(value);
-                return <Icon icon="tabler:check" width={15} height={15} />;
-              } catch {
-                return (
-                  <Icon icon="tabler:x" width={13} height={13} color="red" />
-                );
-              }
-            })()}
+            {isValidJson ? (
+              <Icon icon="tabler:check" width={15} height={15} />
+            ) : (
+              <Icon icon="tabler:x" width={13} height={13} color="red" />
+            )}
           </span>
 
           <span className="hidden sm:inline">

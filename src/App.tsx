@@ -1,7 +1,9 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+
 import { ModalViewer } from "./ui/difftext";
+
 
 import toast from "react-hot-toast";
 import ContainerDescripcion from "./components/container-descripcion";
@@ -18,16 +20,26 @@ import "./App.css"
 import { JsonViewerStore } from "./ui/formatter/stores/jsonviewer";
 
 const App = () => {
+  
   const [value, setValue] = useState<string | null | undefined>(
     localStorage.getItem("jsonData") || "",
   );
-  const [isValid, setIsValid] = useState(true);
-  const [error, setErrorMessage] = useState("");
   const [openViewerJsonFull, setOpenViewerJsonFull] = useState<boolean>(false);
   const [isOpenDiff, setIsOpenDiff] = useState<boolean>(false);
   const [isOpenDiffText, setIsOpenDiffText] = useState<boolean>(false);
   const [isDecode, setIsDecode] = useState<boolean>(false);
   const [showGrid, setShowGrid] = useState(false);
+
+  // Derived JSON validation (memoized to avoid parsing on every render)
+  const { isValid, error } = useMemo(() => {
+    if (!value) return { isValid: false, error: "JSON inválido. Por favor verifica tu entrada." };
+    try {
+      JSON.parse(value);
+      return { isValid: true, error: "" };
+    } catch {
+      return { isValid: false, error: "JSON inválido. Por favor verifica tu entrada." };
+    }
+  }, [value]);
 
   const showFullScreen = JsonViewerStore((state) => state.fullScreenModal);
 
@@ -51,28 +63,20 @@ const App = () => {
 
   const [showConsole, setShowConsole] = useState<boolean>(false);
 
-  const handleDownloadJson = () => toogleDownload(!isDownload);
-  const handleCloseAll = () => setOpenViewerJsonFull(false);
-  const handleCloseDecode = () => setIsDecode(false);
-  const handleCloseDiffText = () => setIsOpenDiffText(false);
-  const handleCloseDiff = () => setIsOpenDiff(false);
-  const handleCloseConsole = () => setShowConsole(false);
-  const handleCloseJsonViewerDowload = () =>
-    setOpenModalDownload(!openModalDownload);
+  const [downloadFileName, setDownloadFileName] = useState("");
 
-  useEffect(() => {
-    try {
-      JSON.parse(value);
-      setIsValid(true);
-      setErrorMessage("");
-    } catch {
-      setIsValid(false);
-      setErrorMessage("JSON inválido. Por favor verifica tu entrada.");
-    }
-  }, [value]);
+  const handleDownloadJson = useCallback(() => toogleDownload(!isDownload), [toogleDownload, isDownload]);
+  const handleCloseAll = useCallback(() => setOpenViewerJsonFull(false), []);
+  const handleCloseDecode = useCallback(() => setIsDecode(false), []);
+  const handleCloseDiffText = useCallback(() => setIsOpenDiffText(false), []);
+  const handleCloseDiff = useCallback(() => setIsOpenDiff(false), []);
+  const handleCloseConsole = useCallback(() => setShowConsole(false), []);
+  const handleCloseJsonViewerDowload = useCallback(() => setOpenModalDownload(!openModalDownload), [openModalDownload, setOpenModalDownload]);
+
+
 
   // Limpiar el input y el formatter
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     if (localStorage.getItem("jsonData") === null) {
       toast.error("No hay nada que limpiar.");
       return;
@@ -80,10 +84,10 @@ const App = () => {
     setValue("");
     localStorage.removeItem("jsonData");
     toast.success("Limpiado exitosamente.");
-  };
+  }, []);
 
   // Cargue del input del json o txt
-  const handleClickCargueJson = () => {
+  const handleClickCargueJson = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json,.txt";
@@ -103,38 +107,46 @@ const App = () => {
 
     // Remuevo ese input de cargue json para no dejarlos en el nodo
     input.remove();
-  };
+  }, []);
 
-  const handleClickOpenModal = () => setOpenViewerJsonFull(!openViewerJsonFull);
 
-  const handleClickminifyJson = () => {
+
+  const handleClickminifyJson = useCallback(() => {
+    if (!value) {
+      toast.error("JSON inválido para minificar");
+      return;
+    }
     try {
-      const parseado = JSON.parse(value);
+      const parseado = JSON.parse(value as string);
       setValue(JSON.stringify(parseado));
 
       toast.success("JSON minificado");
     } catch {
       toast.error("JSON inválido para minificar");
     }
-  };
+  }, [value]);
 
-  const handleCopy = () => {
-    if (value.length > 0) {
-      try {
-        navigator.clipboard
-          .writeText(value)
-          .then(() => toast.success("Copiado exitosamente"));
-      } catch {
-        toast.error("Ocurrio un error al copiar.");
-      }
+  const handleCopy = useCallback(() => {
+    if (!value || value.length === 0) {
+      toast.error("Estas seguro que tienes algo que copiar?");
       return;
     }
-    toast.error("Estas seguro que tienes algo que copiar?");
-  };
-
-  const handleCopyUrl = () => {
     try {
-      const encoded = btoa(unescape(encodeURIComponent(value)));
+      navigator.clipboard
+        .writeText(value as string)
+        .then(() => toast.success("Copiado exitosamente"));
+    } catch {
+      toast.error("Ocurrio un error al copiar.");
+    }
+  }, [value]);
+
+  const handleCopyUrl = useCallback(() => {
+    if (!value) {
+      toast.error("Error al generar URL compartible");
+      return;
+    }
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(value as string)));
       const url = new URL(window.location.href);
       url.searchParams.set("jsdata", encoded);
       const fullUrl = url.toString();
@@ -150,16 +162,15 @@ const App = () => {
     } catch {
       toast.error("Error al generar URL compartible");
     }
-  };
+  }, [value]);
 
   useEffect(() => {
+
+    localStorage.clear()
+
     const keydown = (e: KeyboardEvent) => {
       if (e.key === "x" && e.ctrlKey) {
-        if (!showConsole) {
-          setShowConsole(true);
-          return;
-        }
-        setShowConsole(false);
+        setShowConsole((prev) => !prev);
       }
     };
 
@@ -175,11 +186,10 @@ const App = () => {
       {/* Botón toggle layout en fixed */}
       <div className="fixed bottom-4 left-4 z-50  items-center justify-center   text-zinc-300 px-4 py-2 text-sm rounded-xl shadow-lg transition-all flex flex-row gap-2">
         <button
-          className=" z-50 flex items-center justify-center gap-2 bg-gradient-to-t from-zinc-900 to-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 text-sm rounded-xl shadow-lg transition"
+          className=" z-50 flex items-center justify-center gap-2 bg-gradient-to-t from-zinc-900 to-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 text-sm rounded-xl shadow-lg transition min-w-[120px]"
           onClick={() => {
-            setShowAurora(showAurora ? false : true);
+            setShowAurora(!showAurora);
           }}
-          style={{ minWidth: 120 }}
         >
           <Icon icon="tabler:beer" width="20" height="20" />
           {showAurora ? "Ocultar Aurora" : "Mostrar Aurora"}
@@ -207,10 +217,13 @@ const App = () => {
               <h4 className="text-center ">Descargar Json</h4>
               <input
                 className="input-gray w-full"
-                value
+                value={downloadFileName}
                 placeholder="Nombre Archivo"
                 type="text"
-                onChange={(e) => onChangeNameFileDownload(e.target.value)}
+                onChange={(e) => {
+                  setDownloadFileName(e.target.value);
+                  onChangeNameFileDownload(e.target.value);
+                }}
               />
               <button
                 className="bg-blue-500 w-full p-2 rounded"
@@ -290,6 +303,8 @@ const App = () => {
                       value={value}
                       setValue={setValue}
                       classText="h-78"
+                      heightEditor="200px"
+                      classNameContainerEditor=""
                     />
                     <section className="rounded-xl backdrop-blur shadow-2xl bg-zinc-900/80 p-6 flex flex-col gap-y-3">
                       <div className="p-1 flex justify-between">
@@ -302,8 +317,11 @@ const App = () => {
                         <JsonViewerLazy
                           data={value}
                           isOpen={openViewerJsonFull}
+                          isOpenModal={openViewerJsonFull}
+                          setIsOpenModal={setOpenViewerJsonFull}
                           height="50vh"
                           maxHeight="50vh"
+                          __changed={{}}
                         />
                       </div>
                     </section>
@@ -316,12 +334,14 @@ const App = () => {
 
         <BaseModalLazy isOpen={showFullScreen} onClose={handleCloseAll}>
           <JsonViewerLazy
-            language="json"
             maxHeight="90vh"
             width="90vw"
             height="90vh"
             data={value}
             isOpen={openViewerJsonFull}
+            isOpenModal={openViewerJsonFull}
+            setIsOpenModal={setOpenViewerJsonFull}
+            __changed={{}}
           />
         </BaseModalLazy>
 
