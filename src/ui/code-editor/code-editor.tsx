@@ -1,376 +1,187 @@
-import { Icon } from '@iconify/react/dist/iconify.js';
-import bolt from '@iconify-icons/tabler/bolt';
-import { AnimatePresence, motion } from 'motion/react';
-import type React from 'react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
-import highlightCode from './higlight-code';
-import LazyListItem from '../lazylist.tsx';
-import { useJsonHook } from './methods-json/method.json';
-import { useXmlHook } from './methods-xml/method.xml';
+import type React from "react";
+import { memo, useDeferredValue, useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { Icon, iconReplace, iconX } from "../icons";
+import { escapeHtml, highlightJson } from "./highlight";
 
-import type { CodeEditorProps } from './types';
+export interface CodeEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  language?: "json" | "text";
+  placeholder?: string;
+  /** Línea (1-based) a marcar como error. */
+  errorLine?: number;
+  ariaLabel?: string;
+  autoFocus?: boolean;
+}
+
+// Deben coincidir con las clases `text-xs leading-5 p-3` de las capas.
+const LINE_HEIGHT = 20;
+const PADDING = 12;
+const LAYER = "p-3 font-mono text-xs leading-5 whitespace-pre";
 
 const CodeEditor = ({
-  value = '',
-  language = 'json',
+  value,
   onChange,
-  maxHeight = '100%',
-  height = '200px',
-  minHeight = '68vh',
-  placeholder = '// Escribe tu código aqui...',
-  classNameContainer = '',
+  language = "json",
+  placeholder,
+  errorLine,
+  ariaLabel,
+  autoFocus,
 }: CodeEditorProps) => {
-  // Referencias al DOOM
-  const inputRefTextOld = useRef<HTMLInputElement>(null);
-  const inputRefTextNew = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
-  const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const gutterRef = useRef<HTMLPreElement>(null);
 
-  const [isOpenBar, setIsOpenBar] = useState<boolean>(false);
-  const [code, setCode] = useState(value);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [find, setFind] = useState("");
+  const [replacement, setReplacement] = useState("");
 
-  // A debounced "displayCode" used for heavy work (highlighting, line counts)
-  const [displayCode, setDisplayCode] = useState(code);
-  const debounceTimerRef = useRef<number | null>(null);
+  // El resaltado es lo costoso: se difiere para no bloquear la escritura.
+  const deferred = useDeferredValue(value);
 
-  useEffect(() => {
-    // Debounce updates to displayCode to avoid expensive recalculations on every keystroke
-    if (debounceTimerRef.current) {
-      window.clearTimeout(debounceTimerRef.current);
+  const html = useMemo(
+    // El salto final evita que la última línea vacía colapse.
+    () => (language === "json" ? highlightJson(deferred) : escapeHtml(deferred)) + "\n",
+    [deferred, language],
+  );
+
+  const lineNumbers = useMemo(() => {
+    const count = deferred.split("\n").length;
+    return Array.from({ length: count }, (_, i) => i + 1).join("\n");
+  }, [deferred]);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    const { scrollTop, scrollLeft } = e.currentTarget;
+    if (highlightRef.current) {
+      highlightRef.current.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
     }
-    debounceTimerRef.current = window.setTimeout(() => {
-      setDisplayCode(code);
-      debounceTimerRef.current = null;
-    }, 60); // 60ms works well for editing responsiveness vs CPU usage
-
-    return () => {
-      if (debounceTimerRef.current) window.clearTimeout(debounceTimerRef.current);
-    };
-  }, [code]);
-
-  // --------------------------------------- Custom Hooks -------------------------------------
-  const { JsonSchema, minifyJson } = useJsonHook({
-    code: code,
-    setCode: setCode,
-  });
-
-  const { XmlScheme, minifyXml } = useXmlHook({
-    code: code,
-    setCode: setCode,
-  });
-
-  const lineCount = useMemo(() => {
-    // Use the debounced displayCode to avoid repeating split on every keystroke
-    return displayCode.split('\n').length;
-  }, [displayCode]);
-
-  // Memoize highlighted HTML so we don't re-highlight on every keystroke
-  const highlightHtml = useMemo(() => highlightCode(displayCode, language), [
-    displayCode,
-    language,
-  ]);
-
-  // Validate JSON (memoized) — uses the debounced displayCode to avoid frequent parsing
-  const isValidJson = useMemo(() => {
-    if (language !== 'json') return false;
-    try {
-      JSON.parse(displayCode);
-      return true;
-    } catch {
-      return false;
+    if (gutterRef.current) {
+      gutterRef.current.style.transform = `translateY(${-scrollTop}px)`;
     }
-  }, [displayCode, language]);
-
-  // Global keyboard listener (moved below so callbacks are defined first)
-
-  const HandlersMinifyBody = useCallback(() => {
-    if (language === 'json') {
-      return minifyJson();
-    }
-
-    if (language === 'xml') {
-      return minifyXml();
-    }
-
-    return toast.error(
-      'Es diferente a json por lo ucal no se se puede minifycar',
-    );
-  }, [language, minifyJson, minifyXml]);
-
-  const HandlersIdentarBody = useCallback(() => {
-    if (language === 'json') return JsonSchema();
-
-    if (language === 'xml') {
-      return XmlScheme();
-    }
-  }, [language, JsonSchema, XmlScheme]);
-
-  useEffect(() => {
-    textareaRef.current?.focus();
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // No importa si esta en minuscuela la b o en mayuscula siempre se abrira
-      if ((e.ctrlKey && e.key === 'b') || (e.ctrlKey && e.key === 'B')) {
-        e.preventDefault();
-        setIsOpenBar((prev) => !prev);
-      }
-
-      if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        HandlersIdentarBody();
-        alert('guardar y minificar');
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleGlobalKeyDown);
-    };
-  }, [HandlersIdentarBody]);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setCode(newValue);
-    onChange?.(newValue);
-  }, [onChange]);
-
-  const handleScroll = () => {
-    if (
-      !textareaRef.current ||
-      !lineNumbersRef.current ||
-      !highlightRef.current
-    )
-      return;
-
-    const scrollTop = textareaRef.current.scrollTop;
-    const scrollLeft = textareaRef.current.scrollLeft;
-
-    requestAnimationFrame(() => {
-      lineNumbersRef.current!.scrollTop = scrollTop;
-      highlightRef.current!.scrollTop = scrollTop;
-      highlightRef.current!.scrollLeft = scrollLeft;
-    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab') {
+    const el = e.currentTarget;
+    const mod = e.ctrlKey || e.metaKey;
+
+    if (e.key === "Tab" && !e.shiftKey && !mod) {
       e.preventDefault();
-      const start = e.currentTarget.selectionStart;
-      const end = e.currentTarget.selectionEnd;
-      const newValue = code.substring(0, start) + '  ' + code.substring(end);
-      setCode(newValue);
-      onChange?.(newValue);
-
-      if (textareaRef.current) {
-        textareaRef.current.selectionStart = textareaRef.current.selectionEnd =
-          start + 2;
+      // execCommand conserva el historial de deshacer del navegador.
+      if (!document.execCommand("insertText", false, "  ")) {
+        el.setRangeText("  ", el.selectionStart, el.selectionEnd, "end");
+        onChange(el.value);
       }
+      return;
+    }
+
+    if (mod && (e.key.toLowerCase() === "h" || e.key.toLowerCase() === "b")) {
+      e.preventDefault();
+      setReplaceOpen((open) => !open);
     }
   };
 
-  const handleOpenRemplazoBar = () => {
-    setIsOpenBar((prev) => !prev);
+  const replace = (all: boolean) => {
+    if (!find) return toast.error("Ingresa un valor a buscar");
+    if (!value.includes(find)) return toast.error("No se encontró el valor");
+    onChange(all ? value.replaceAll(find, replacement) : value.replace(find, replacement));
   };
 
-  const handleCLickReplaceTextFirst = useCallback(() => {
-    const from = inputRefTextOld.current?.value || '';
-    const to = inputRefTextNew.current?.value || '';
+  const closeReplace = () => {
+    setReplaceOpen(false);
+    textareaRef.current?.focus();
+  };
 
-    if (!from) return toast.error('Ingresa un valor a buscar');
-
-    if (!code?.includes(from)) {
-      return toast.error('El valor a buscar no se encuentra en el texto');
-    }
-
-    const result = code.replace(from, to);
-    setCode(result);
-    onChange?.(result);
-    toast.success('Reemplazo realizado');
-  }, [code, onChange]);
-
-  const lineNumberElements = useMemo(
-    () =>
-      Array.from({ length: lineCount }, (_, i) => (
-        <div key={i} className="leading-6 text-right min-w-[2rem] font-mono">
-          {i + 1}
-        </div>
-      )),
-    [lineCount],
-  );
-
-  const handleCLickReplaceText = useCallback(() => {
-    const from = inputRefTextOld.current?.value || '';
-    const to = inputRefTextNew.current?.value || '';
-
-    if (!from) return toast.error('Ingresa un valor a buscar');
-    if (!code?.includes(from)) {
-      return toast.error('El valor a buscar no se encuentra en el texto');
-    }
-
-    const result = (code as string).replaceAll
-      ? (code as string).replaceAll(from, to)
-      : (code as string).split(from).join(to);
-
-    setCode(result);
-    onChange?.(result);
-    toast.success('Reemplazo realizado');
-  }, [code, onChange]);
+  const matches = find ? value.split(find).length - 1 : 0;
 
   return (
-    <main className="border rounded-xl overflow-hidden border-zinc-800 relative">
-      <AnimatePresence mode="wait">
-        {isOpenBar && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              filter: 'blur(0px)',
-              transition: {
-                type: 'spring',
-                stiffness: 200,
-                damping: 20,
-              },
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-              scale: 0.95,
-              filter: 'blur(4px)',
-              transition: { duration: 0.2 },
-            }}
-            layout
-            className="backdrop-blur-3xl bg-zinc-900/35 border border-zinc-900 p-3 flex flex-col w-52 shadow-xl shadow-zinc-800 gap-1 rounded  right-4 top-5 absolute z-[778]"
-          >
-            <input
-              ref={inputRefTextOld}
-              type="text"
-              autoFocus
-              className="input-base"
-              tabIndex={0}
-              title="Valor a buscar"
-              placeholder="Valor a buscar"
-            />
-            <input
-              ref={inputRefTextNew}
-              type="text"
-              className="input-base"
-              placeholder="Valor a Remplazar"
-            />
-            <div className="flex h-6 gap-2 text-wrap whitespace-normal">
-              <button
-                className="bg-gradient-to-r flex-1 from-green-400 to-green-500 p-1 rounded-md text-xs truncate"
-                onClick={handleCLickReplaceTextFirst}
-                title="Reemplazar solo la primera coincidencia"
-              >
-                Reemplazar primero
-              </button>
-              <button
-                className="bg-gradient-to-r flex-1 from-sky-400 to-sky-900 p-1 rounded-md text-xs truncate"
-                onClick={handleCLickReplaceText}
-                title="Reemplazar todas las coincidencias"
-              >
-                Reemplazar todo
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div
-        className={`relative flex  text-xs overflow-hidden bg-zinc-900/50 ring-none backdrop-blur-3xl ${classNameContainer} `}
-      >
-        {/* Line Numbers */}
-        <div
-          ref={lineNumbersRef}
-          className="px-3 py-2 text-sm overflow-hidden bg-zinc-950/20 border-r rounded-tl-xl border-zinc-800 backdrop-blur-3xl text-[#00a4b9]"
-          style={{ height, minHeight, maxHeight }}
+    <div className="group relative flex h-full min-h-0 bg-black/25">
+      {/* Números de línea */}
+      <div className="shrink-0 overflow-hidden border-r border-line select-none">
+        <pre
+          ref={gutterRef}
+          aria-hidden="true"
+          className="min-w-10 px-2 py-3 text-right font-mono text-xs leading-5 text-faint"
         >
-          {lineNumberElements}
-        </div>
+          {lineNumbers}
+        </pre>
+      </div>
 
-        {/* Editor Container */}
-        <div className="flex-1 relative ">
-          <LazyListItem>
+      <div className="relative min-w-0 flex-1 overflow-hidden">
+        {/* Capa de resaltado: se desplaza con transform siguiendo al textarea */}
+        <div ref={highlightRef} aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {errorLine !== undefined && (
             <div
-              ref={highlightRef}
-              className="absolute  inset-0 p-2 text-sm font-mono leading-6 pointer-events-none overflow-hidden whitespace-pre-wrap break-words  text-[#d4d4d4]"
-              dangerouslySetInnerHTML={{
-                __html: /* memoized to avoid re-highlighting on every keystroke */ highlightHtml,
-              }}
+              className="absolute left-0 w-[10000px] border-l-2 border-danger bg-danger/10"
+              style={{ top: PADDING + (errorLine - 1) * LINE_HEIGHT, height: LINE_HEIGHT }}
             />
-          </LazyListItem>
+          )}
+          <pre className={LAYER} dangerouslySetInnerHTML={{ __html: html }} />
+        </div>
 
-          <LazyListItem>
-            <textarea
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onScroll={handleScroll}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          aria-label={ariaLabel}
+          autoFocus={autoFocus}
+          wrap="off"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          className={`${LAYER} absolute inset-0 size-full resize-none overflow-auto bg-transparent text-transparent caret-fg outline-none placeholder:text-faint`}
+        />
+      </div>
+
+      {replaceOpen ? (
+        <div className="absolute top-2 right-4 z-10 flex w-64 flex-col gap-1.5 rounded-lg border border-line-strong bg-raised p-2 shadow-xl shadow-black/40">
+          <div className="flex items-center gap-1">
+            <input
               autoFocus
-              ref={textareaRef}
-              value={code}
-              aria-placeholder={placeholder}
-              onChange={handleChange}
-              onScroll={handleScroll}
-              onKeyDown={handleKeyDown}
-              className="absolute inset-0  transition-colors p-2 ring-none ring-0 focus:ring-none text-sm font-mono leading-6 resize-none outline-none bg-r whitespace-pre-wrap break-words placeholder-lime-200"
-              style={{
-                color: 'transparent',
-                caretColor: '#d4d4d4',
-              }}
-              spellCheck={false}
-              placeholder={placeholder}
+              className="input"
+              placeholder="Buscar"
+              value={find}
+              onChange={(e) => setFind(e.target.value)}
+              onKeyDown={(e) => e.key === "Escape" && closeReplace()}
             />
-          </LazyListItem>
+            <button type="button" className="icon-btn" onClick={closeReplace} aria-label="Cerrar">
+              <Icon icon={iconX} width={14} />
+            </button>
+          </div>
+          <input
+            className="input"
+            placeholder="Reemplazar con"
+            value={replacement}
+            onChange={(e) => setReplacement(e.target.value)}
+            onKeyDown={(e) => e.key === "Escape" && closeReplace()}
+          />
+          <div className="flex items-center gap-1.5">
+            <span className="mr-auto font-mono text-[11px] text-faint">
+              {matches} {matches === 1 ? "coincidencia" : "coincidencias"}
+            </span>
+            <button type="button" className="btn" onClick={() => replace(false)}>
+              Primera
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => replace(true)}>
+              Todas
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Footer toobar abajo */}
-      <div className="relative flex justify-between items-center text-[8px] text-zinc-400 bg-zinc-950/70 border-t border-zinc-800 px-2 py-1.5 shadow-sm">
-        {/* Botones a la izquieaa */}
-        <div className="flex items-center gap-1">
-          <button
-            className="bg-zinc-900 hover:bg-zinc-700 px-2.5 py-1 rounded flex items-center gap-1 transition"
-            onClick={HandlersIdentarBody}
-          >
-            <Icon icon="tabler:braces" width={14} />
-            <span className="hidden sm:inline">Prettify</span>
-          </button>
-
-          <button
-            className="bg-zinc-900 hover:bg-zinc-700 px-2.5 py-1 rounded flex items-center gap-1 transition"
-            onClick={HandlersMinifyBody}
-          >
-            <Icon icon={bolt} width={14} />
-            <span className="hidden sm:inline">Minify</span>
-          </button>
-
-          <button
-            title="Abrir barra de reemplazo"
-            className="bg-zinc-900 hover:bg-zinc-700 px-2.5 py-1 rounded flex items-center gap-1 transition"
-            onClick={handleOpenRemplazoBar}
-          >
-            <Icon icon="tabler:replace" width={14} />
-            <span className="hidden sm:inline">Reemplazar</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-green-400">
-            {isValidJson ? (
-              <Icon icon="tabler:check" width={15} height={15} />
-            ) : (
-              <Icon icon="tabler:x" width={13} height={13} color="red" />
-            )}
-          </span>
-
-          <span className="hidden sm:inline">
-            {language.toUpperCase()} | {code.length} caracteres | {lineCount}{' '}
-            líneas
-          </span>
-        </div>
-      </div>
-    </main>
+      ) : (
+        <button
+          type="button"
+          title="Buscar y reemplazar (Ctrl+H)"
+          aria-label="Buscar y reemplazar"
+          className="icon-btn absolute top-2 right-4 z-10 border border-line bg-raised opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
+          onClick={() => setReplaceOpen(true)}
+        >
+          <Icon icon={iconReplace} width={14} />
+        </button>
+      )}
+    </div>
   );
 };
 

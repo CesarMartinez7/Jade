@@ -1,27 +1,25 @@
 import ReactDOM from 'react-dom/client';
-import Aurora from './ui/aurora/Aurora';
-import App from './App';
 import { Toaster } from 'react-hot-toast';
+import App from './App';
+
 const rootEl = document.getElementById('root');
 if (rootEl) {
   const root = ReactDOM.createRoot(rootEl);
   root.render(
     <>
-     <div className="z-0 fixed">
-      <Aurora
-        colorStops={['#27272a', '#00d1b2', '#11181b']}
-        blend={0.5}
-        amplitude={1.0}
-        speed={0.5}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'var(--color-raised)',
+            color: 'var(--color-fg)',
+            border: '1px solid var(--color-line-strong)',
+            borderRadius: '12px',
+            fontSize: '12px',
+          },
+        }}
       />
-    </div>
-    <Toaster
-      toastOptions={{
-        className: 'bg-zinc-700! text-white!',
-      }}
-    />
-    <App />
-    
-    </>
+      <App />
+    </>,
   );
 }
