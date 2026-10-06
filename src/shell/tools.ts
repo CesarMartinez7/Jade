@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { iconBraces, iconDiff, iconFileDiff, iconKey, iconRegex } from "../ui/icons";
+import { iconBraces, iconDiff, iconFileDiff, iconKey, iconPalette, iconRegex } from "../ui/icons";
 
 export const TOOLS = [
   {
@@ -36,6 +36,13 @@ export const TOOLS = [
     description: "Probar expresiones regulares",
     icon: iconRegex,
     component: lazy(() => import("../tools/regex-tool")),
+  },
+  {
+    id: "color",
+    label: "Colores",
+    description: "Convertir y comprobar contraste",
+    icon: iconPalette,
+    component: lazy(() => import("../tools/color-tool")),
   },
 ] as const;
 
