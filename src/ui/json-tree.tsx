@@ -41,7 +41,7 @@ function Primitive({ value }: { value: Exclude<JsonValue, object> | null }) {
         &quot;{value.slice(0, LONG_STRING)}
         <button
           type="button"
-          className="mx-1 rounded bg-hover px-1 text-[10px] text-muted hover:text-fg"
+          className="mx-1 bg-hover px-1 text-[10px] text-muted hover:text-fg"
           onClick={() => setExpanded(true)}
         >
           +{value.length - LONG_STRING}
@@ -91,7 +91,7 @@ const Node = memo(({ name, value, path, depth, openDepth }: NodeProps) => {
 
   if (!isContainer) {
     return (
-      <div className="group/row rounded-sm pr-2 hover:bg-hover/60" style={indent}>
+      <div className="group/row pr-2 hover:bg-hover/60" style={indent}>
         <span className="inline-block w-4" />
         {label}
         <Primitive value={value} />
@@ -109,7 +109,7 @@ const Node = memo(({ name, value, path, depth, openDepth }: NodeProps) => {
 
   return (
     <div>
-      <div className="group/row rounded-sm pr-2 hover:bg-hover/60" style={indent}>
+      <div className="group/row pr-2 hover:bg-hover/60" style={indent}>
         <button
           type="button"
           aria-expanded={open}
@@ -152,7 +152,7 @@ const Node = memo(({ name, value, path, depth, openDepth }: NodeProps) => {
           {entries.length > limit && (
             <button
               type="button"
-              className="my-0.5 rounded bg-hover px-2 text-[11px] text-muted hover:text-fg"
+              className="my-0.5 bg-hover px-2 text-[11px] text-muted hover:text-fg"
               style={{ marginLeft: (depth + 1) * 16 + 20 }}
               onClick={() => setLimit(limit + PAGE)}
             >

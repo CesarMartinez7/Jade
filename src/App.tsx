@@ -1,13 +1,10 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import "./App.css";
-import { useReducedMotion } from "./hooks/useReducedMotion";
-import Aurora from "./reactbits/Aurora";
-import ClickSpark from "./reactbits/ClickSpark";
-import Dock from "./reactbits/Dock";
 import CommandPalette from "./shell/command-palette";
 import { TOOLS, type ToolId, toolFromHash } from "./shell/tools";
 import { useUi } from "./stores/ui";
-import { Icon, iconSearch } from "./ui/icons";
+import { Icon } from "./ui/icons";
+import { Logo } from "./ui/logo";
 
 const App = () => {
   const [active, setActive] = useState<ToolId>(toolFromHash);
@@ -17,8 +14,8 @@ const App = () => {
   const paletteOpen = useUi((state) => state.paletteOpen);
   const setPaletteOpen = useUi((state) => state.setPaletteOpen);
   const togglePalette = useUi((state) => state.togglePalette);
-
-  const reducedMotion = useReducedMotion();
+  const theme = useUi((state) => state.theme);
+  const toggleTheme = useUi((state) => state.toggleTheme);
 
   const selectTool = useCallback((id: ToolId) => {
     setActive(id);
@@ -42,60 +39,76 @@ const App = () => {
     };
   }, [selectTool, togglePalette]);
 
-  const dockItems = useMemo(
-    () => [
-      ...TOOLS.map((tool) => ({
-        icon: <Icon icon={tool.icon} width={18} />,
-        label: tool.label,
-        onClick: () => selectTool(tool.id),
-        className:
-          active === tool.id
-            ? "border-transparent! bg-fg! text-bg!"
-            : "",
-      })),
-      {
-        icon: <Icon icon={iconSearch} width={18} />,
-        label: "Buscar · Ctrl K",
-        onClick: () => setPaletteOpen(true),
-      },
-    ],
-    [active, selectTool, setPaletteOpen],
-  );
-
   return (
-    <ClickSpark sparkColor="#ffffff" sparkSize={8} sparkRadius={18} sparkCount={6} duration={350}>
-      {!reducedMotion && (
-        <div className="pointer-events-none fixed inset-0 opacity-15" aria-hidden="true">
-          <Aurora colorStops={["#ffffff", "#5a5a5a", "#ffffff"]} amplitude={1.1} blend={0.6} speed={0.5} />
+    <div className="flex h-full flex-col gap-4 p-4 md:flex-row">
+      <aside className="brutal flex shrink-0 items-center gap-2 rounded-xl bg-bg p-2 md:w-56 md:flex-col md:items-stretch md:gap-0 md:p-0">
+        <div className="flex items-center gap-3 md:border-b-2 md:border-ink md:bg-mint md:p-4 md:text-onfill">
+          <Logo size={36} className="shrink-0" />
+          <div className="hidden min-w-0 md:block">
+            <p className="text-[26px] leading-none font-extrabold tracking-tight">Jade</p>
+            <p className="mt-1 text-[11px] font-semibold">Caja de herramientas dev</p>
+          </div>
         </div>
-      )}
 
-      <main className="relative mx-auto h-full max-w-[1800px]">
+        <nav aria-label="Herramientas" className="min-w-0 flex-1 md:flex-none md:p-3">
+          <ol className="flex gap-1.5 overflow-x-auto md:flex-col md:overflow-visible">
+            {TOOLS.map((tool, i) => (
+              <li key={tool.id}>
+                <button
+                  type="button"
+                  title={tool.description}
+                  aria-current={active === tool.id ? "page" : undefined}
+                  className="group flex w-full items-center gap-2.5 rounded-lg border-2 border-transparent px-2 py-1.5 text-left whitespace-nowrap transition-colors hover:border-ink hover:bg-hover aria-[current=page]:border-ink aria-[current=page]:bg-fg aria-[current=page]:text-bg"
+                  onClick={() => selectTool(tool.id)}
+                >
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border-2 border-ink bg-bg text-fg group-aria-[current=page]:bg-yellow group-aria-[current=page]:text-onfill">
+                    <Icon icon={tool.icon} width={15} />
+                  </span>
+                  <span className="hidden text-[13px] font-bold group-aria-[current=page]:inline md:inline">
+                    {tool.label}
+                  </span>
+                  <span className="ml-auto hidden font-mono text-[10px] font-bold opacity-50 md:inline">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-2 md:mt-auto md:flex-col md:items-stretch md:border-t-2 md:border-ink md:p-3">
+          <button type="button" className="btn justify-between" onClick={() => setPaletteOpen(true)}>
+            Buscar <kbd className="hidden md:inline-flex">Ctrl K</kbd>
+          </button>
+          <button
+            type="button"
+            className="btn justify-between"
+            title="Cambiar entre día y noche"
+            onClick={toggleTheme}
+          >
+            <span className="hidden md:inline">Tema</span>
+            <span>{theme === "dia" ? "☀ Día" : "☾ Noche"}</span>
+          </button>
+          <p className="hidden pt-1 text-[11px] leading-4 font-medium text-muted md:block">
+            100% local: nada de lo que pegues sale de tu navegador.
+          </p>
+        </div>
+      </aside>
+
+      <main className="min-h-0 min-w-0 flex-1">
         {TOOLS.filter((tool) => visited.includes(tool.id)).map((tool) => (
           <div key={tool.id} hidden={active !== tool.id} className="h-full animate-tool-in">
-            <Suspense fallback={<p className="p-6 text-xs text-faint">Cargando…</p>}>
+            <Suspense fallback={<p className="label p-6">Cargando…</p>}>
               <tool.component />
             </Suspense>
           </div>
         ))}
       </main>
 
-      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
-        <Dock
-          items={dockItems}
-          className="glass pointer-events-auto"
-          panelHeight={56}
-          dockHeight={80}
-          baseItemSize={38}
-          magnification={54}
-          distance={120}
-        />
-      </nav>
-
       {paletteOpen && (
         <CommandPalette onClose={() => setPaletteOpen(false)} onSelectTool={selectTool} />
       )}
-    </ClickSpark>
+    </div>
   );
 };
 

@@ -73,17 +73,17 @@ export default function CommandPalette({ onClose, onSelectTool }: CommandPalette
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[15vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-page/80 p-4 pt-[15vh]"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Paleta de comandos"
-        className="w-full max-w-lg glass animate-tool-in overflow-hidden rounded-2xl border-line-strong"
+        className="brutal w-full max-w-lg overflow-hidden rounded-xl bg-raised"
         onKeyDown={handleKeyDown}
       >
-        <div className="flex items-center gap-2 border-b border-line px-3">
+        <div className="flex items-center gap-2 border-b-2 border-ink px-3">
           <Icon icon={iconSearch} width={16} className="shrink-0 text-faint" />
           <input
             autoFocus
@@ -107,11 +107,11 @@ export default function CommandPalette({ onClose, onSelectTool }: CommandPalette
               key={command.id}
               role="option"
               aria-selected={i === active}
-              className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm aria-selected:bg-hover"
+              className="flex cursor-pointer items-center gap-3 rounded-lg border-2 border-transparent px-3 py-2 text-sm font-semibold aria-selected:border-ink aria-selected:bg-yellow aria-selected:text-onfill"
               onMouseMove={() => setActive(i)}
               onClick={() => run(command)}
             >
-              <span className="w-10 shrink-0 text-[11px] text-faint">{command.group}</span>
+              <span className="label w-10 shrink-0 text-[10px] opacity-60">{command.group}</span>
               {command.label}
             </li>
           ))}

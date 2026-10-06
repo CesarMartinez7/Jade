@@ -1,49 +1,109 @@
 @import "tailwindcss";
-@import "@fontsource-variable/geist";
-@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/jetbrains-mono";
+
+/*
+  Identidad: neo-brutalismo en verde jade.
+  Página color jade, tarjetas con borde grueso y sombra dura, colores planos
+  (amarillo, rosa, lila) y botones que se "hunden" al presionarlos.
+*/
 
 @theme {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --font-sans: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", Consolas, monospace;
 
-  /* Superficies (escala de grises estilo Geist) */
-  --color-bg: #000000;
-  --color-panel: #0a0a0a;
-  --color-raised: #111111;
-  --color-hover: #1f1f1f;
-  --color-line: rgb(255 255 255 / 0.1);
-  --color-line-strong: rgb(255 255 255 / 0.2);
+  /* Tema "día" (por defecto). El tema "noche" redefine estos valores más abajo. */
+  --color-page: #7be3b5;
+  --color-bg: #ffffff;
+  --color-panel: #f3f3ee;
+  --color-raised: #ffffff;
+  --color-hover: #fff1a8;
+  --color-line: rgb(17 17 17 / 0.14);
+  --color-ink: #111111;
+  --color-shadow: #111111;
 
-  /* Texto */
-  --color-fg: #ededed;
-  --color-muted: #a1a1a1;
-  --color-faint: #707070;
+  --color-fg: #111111;
+  --color-muted: #474747;
+  --color-faint: #767676;
 
-  /* Semánticos: el color solo aparece para comunicar estado */
-  --color-accent: #62c073;
-  --color-danger: #ff6166;
-  --color-warn: #ff990a;
-  --color-info: #52a8ff;
+  /* Rellenos planos: siempre llevan texto oscuro encima, en ambos temas. */
+  --color-mint: #6ee7b0;
+  --color-yellow: #ffd84d;
+  --color-pink: #ff8fc7;
+  --color-lilac: #c4b5fd;
+  --color-onfill: #111111;
 
-  /* Sintaxis */
-  --color-tok-key: #bf7af0;
-  --color-tok-string: #62c073;
-  --color-tok-number: #52a8ff;
-  --color-tok-keyword: #f75f8f;
-  --color-tok-punct: #707070;
+  /* Colores de texto con significado */
+  --color-accent: #00804f;
+  --color-danger: #d92d3a;
+  --color-warn: #b45f00;
+  --color-info: #2457d6;
 
-  --animate-tool-in: tool-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --color-tok-key: #6d3fd6;
+  --color-tok-string: #007a4d;
+  --color-tok-number: #c2410c;
+  --color-tok-keyword: #d6257f;
+  --color-tok-punct: #767676;
+
+  --animate-tool-in: tool-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 
   @keyframes tool-in {
     from {
       opacity: 0;
-      transform: translateY(6px) scale(0.995);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
       transform: none;
     }
   }
+}
+
+:root[data-theme="noche"] {
+  --color-page: #0b100e;
+  --color-bg: #161d1a;
+  --color-panel: #1e2723;
+  --color-raised: #1e2723;
+  --color-hover: #2c3a33;
+  --color-line: rgb(238 245 241 / 0.14);
+  --color-ink: #eef5f1;
+  --color-shadow: #6ee7b0;
+
+  --color-fg: #eef5f1;
+  --color-muted: #b3bdb8;
+  --color-faint: #7f8a85;
+
+  --color-accent: #6ee7b0;
+  --color-danger: #ff7b7b;
+  --color-warn: #ffb347;
+  --color-info: #8ab4ff;
+
+  --color-tok-key: #c4b5fd;
+  --color-tok-string: #6ee7b0;
+  --color-tok-number: #ffb347;
+  --color-tok-keyword: #ff8fc7;
+  --color-tok-punct: #7f8a85;
+}
+
+/* Borde grueso + sombra dura: la firma visual de toda la app. */
+@utility brutal {
+  border: 2px solid var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-shadow);
+}
+
+@utility brutal-sm {
+  border: 2px solid var(--color-ink);
+  box-shadow: 2px 2px 0 var(--color-shadow);
+}
+
+@utility label {
+  @apply text-[11px] font-bold tracking-[0.06em] uppercase;
+}
+
+/* Trama de puntos para los espacios vacíos. */
+@utility dotted {
+  background-image: radial-gradient(var(--color-line) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
 }
 
 @layer base {
@@ -54,7 +114,7 @@
   }
 
   body {
-    @apply bg-bg text-fg font-sans text-sm antialiased;
+    @apply bg-page text-fg font-sans text-sm antialiased;
   }
 
   button {
@@ -63,56 +123,68 @@
 
   button:disabled {
     cursor: not-allowed;
-    opacity: 0.4;
+    opacity: 0.45;
   }
 
   ::selection {
-    background: rgb(82 168 255 / 0.35);
+    background: var(--color-pink);
+    color: var(--color-onfill);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-info);
-    outline-offset: 1px;
+    outline: 3px solid var(--color-info);
+    outline-offset: 2px;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+    scrollbar-color: var(--color-ink) transparent;
   }
 
   kbd {
-    @apply inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-md border border-line-strong bg-white/5 px-1 font-mono text-[10px] text-muted;
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-md border-2 border-b-4 border-ink bg-bg px-1 font-mono text-[10px] font-bold text-fg;
   }
-}
-
-/* Superficie de vidrio compartida por paneles, cabecera y dock */
-@utility glass {
-  @apply border border-line bg-panel/70 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-2xl;
 }
 
 @layer components {
   .btn {
-    @apply inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white/[0.04] px-3 text-xs font-medium whitespace-nowrap text-fg transition-all hover:border-line-strong hover:bg-white/[0.09] active:scale-[0.97];
+    @apply brutal-sm inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-bg px-3 text-xs font-bold whitespace-nowrap text-fg transition-[transform,box-shadow,background-color] duration-100;
+  }
+
+  .btn:hover:not(:disabled) {
+    @apply bg-yellow text-onfill;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--color-shadow);
+  }
+
+  /* El botón se hunde: se desplaza lo que mide la sombra y la sombra desaparece. */
+  .btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--color-shadow);
   }
 
   .btn-primary {
-    @apply border-transparent bg-fg text-bg hover:border-transparent hover:bg-white/80;
+    @apply bg-pink text-onfill;
   }
 
   .btn-ghost {
-    @apply border-transparent bg-transparent text-muted hover:border-transparent hover:bg-white/[0.06] hover:text-fg;
+    @apply border-transparent bg-transparent text-fg shadow-none;
   }
 
-  .btn-danger {
-    @apply hover:bg-danger/10 hover:text-danger;
+  .btn-ghost:hover:not(:disabled) {
+    @apply border-ink;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    @apply bg-danger text-white;
   }
 
   .icon-btn {
-    @apply inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-white/[0.08] hover:text-fg;
+    @apply inline-flex size-7 shrink-0 items-center justify-center rounded-md border-2 border-transparent text-fg transition-colors hover:border-ink hover:bg-yellow hover:text-onfill;
   }
 
   .input {
-    @apply h-8 w-full rounded-lg border border-line bg-black/30 px-2.5 text-xs text-fg transition-colors placeholder:text-faint focus:border-white/40 focus:outline-none;
+    @apply h-8 w-full rounded-lg border-2 border-ink bg-bg px-2 font-mono text-xs text-fg placeholder:text-faint focus:bg-hover focus:outline-none;
   }
 
   .textarea {
@@ -120,44 +192,68 @@
   }
 
   .panel {
-    @apply glass flex min-h-0 min-w-0 flex-col rounded-2xl;
+    @apply brutal flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-bg;
+    --tone: var(--color-yellow);
+  }
+
+  /* Cada panel alterna el color de su cabecera. */
+  .panel:nth-of-type(3n + 2) {
+    --tone: var(--color-lilac);
+  }
+
+  .panel:nth-of-type(3n) {
+    --tone: var(--color-pink);
   }
 
   .panel-header {
-    @apply flex h-11 shrink-0 items-center justify-between gap-2 border-b border-line px-2.5 pl-4;
+    @apply flex h-10 shrink-0 items-center justify-between gap-2 border-b-2 border-ink pr-2 pl-4 text-onfill;
+    background: var(--tone);
+  }
+
+  .panel-header .icon-btn {
+    @apply text-onfill hover:border-onfill hover:bg-white;
+  }
+
+  .panel-header .btn-ghost {
+    @apply text-onfill;
   }
 
   .panel-title {
-    @apply text-[11px] font-medium tracking-widest text-muted uppercase;
+    @apply label;
   }
 
-  /* Control segmentado */
   .tabs {
-    @apply flex items-center gap-0.5 rounded-lg bg-black/30 p-0.5;
+    @apply flex items-center gap-1;
   }
 
   .tab {
-    @apply inline-flex h-6 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted transition-colors hover:text-fg;
+    @apply inline-flex h-6.5 items-center gap-1.5 rounded-md border-2 border-transparent px-2 text-xs font-bold transition-colors hover:border-onfill;
   }
 
   .tab[aria-selected="true"] {
-    @apply bg-white/10 text-fg shadow-sm;
+    @apply border-onfill bg-onfill text-white;
   }
 
   .badge {
-    @apply inline-flex h-5 items-center gap-1 rounded-full border border-line bg-white/[0.04] px-2 font-mono text-[11px] text-muted;
+    @apply inline-flex h-5.5 items-center gap-1 rounded-full border-2 border-onfill bg-white px-2 font-mono text-[11px] font-bold text-onfill;
   }
 
   .badge-ok {
-    @apply border-accent/25 bg-accent/10 text-accent;
+    @apply bg-mint;
   }
 
   .badge-danger {
-    @apply border-danger/25 bg-danger/10 text-danger;
+    @apply bg-danger text-white;
   }
 
   .badge-warn {
-    @apply border-warn/25 bg-warn/10 text-warn;
+    @apply bg-yellow;
+  }
+
+  /* Etiqueta adhesiva, ligeramente torcida. */
+  .sticker {
+    @apply brutal-sm inline-flex items-center justify-center bg-yellow font-bold text-onfill;
+    transform: rotate(-4deg);
   }
 }
 

@@ -37,7 +37,7 @@ function Side({
     <Panel>
       <div className="panel-header">
         <h2 className="panel-title">{title}</h2>
-        <span className="font-mono text-[11px] text-faint">
+        <span className="font-mono text-[11px] font-bold">
           {value ? `${value.split("\n").length} líneas` : ""}
         </span>
       </div>
@@ -71,7 +71,7 @@ function Line({ line }: { line: DiffLine }) {
         {line.mark && end > start ? (
           <>
             {line.text.slice(0, start)}
-            <span className={`rounded-sm ${style.mark}`}>{line.text.slice(start, end)}</span>
+            <span className={style.mark}>{line.text.slice(start, end)}</span>
             {line.text.slice(end)}
           </>
         ) : (
@@ -102,12 +102,12 @@ export default function TextDiffTool() {
   const visible = onlyChanges ? lines.filter((line) => line.kind !== "same") : lines;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 pb-20">
-      <ToolHeader title="Comparar texto" hint="Diff línea a línea con resaltado del fragmento que cambió.">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <ToolHeader no="03" title="Comparar texto" hint="Diff línea a línea con resaltado del fragmento que cambió.">
         <label className="flex items-center gap-1.5 text-xs text-muted">
           <input
             type="checkbox"
-            className="accent-white"
+            className="accent-accent"
             checked={ignoreSpaces}
             onChange={(e) => setIgnoreSpaces(e.target.checked)}
           />
@@ -116,7 +116,7 @@ export default function TextDiffTool() {
         <label className="flex items-center gap-1.5 text-xs text-muted">
           <input
             type="checkbox"
-            className="accent-white"
+            className="accent-accent"
             checked={onlyChanges}
             onChange={(e) => setOnlyChanges(e.target.checked)}
           />
@@ -146,7 +146,7 @@ export default function TextDiffTool() {
         </button>
       </ToolHeader>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[1fr_1fr_1fr] gap-3 md:grid-cols-2 md:grid-rows-[2fr_3fr]">
+      <div className="grid min-h-0 flex-1 grid-rows-[1fr_1fr_1fr] gap-4 pr-1 pb-1 md:grid-cols-2 md:grid-rows-[2fr_3fr]">
         <Side title="Original" value={original} onChange={setOriginal} />
         <Side title="Modificado" value={compare} onChange={setCompare} />
 

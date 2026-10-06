@@ -63,17 +63,15 @@ function DateRow({ label, seconds }: { label: string; seconds: JsonValue | undef
 
 function Part({
   title,
-  color,
   data,
 }: {
   title: string;
-  color: string;
   data: Claims;
 }) {
   return (
     <Panel>
       <div className="panel-header">
-        <h2 className={`panel-title ${color}`}>{title}</h2>
+        <h2 className="panel-title">{title}</h2>
         <button
           type="button"
           className="icon-btn"
@@ -102,8 +100,8 @@ export default function JwtTool() {
   const expired = typeof exp === "number" && exp * 1000 < Date.now();
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 pb-20">
-      <ToolHeader title="JWT" hint="Decodifica header y payload. El token nunca sale de tu navegador.">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <ToolHeader no="04" title="JWT" hint="Decodifica header y payload. El token nunca sale de tu navegador.">
         <button
           type="button"
           className="btn btn-ghost btn-danger"
@@ -114,18 +112,12 @@ export default function JwtTool() {
         </button>
       </ToolHeader>
 
-      <div className="grid min-h-0 flex-1 gap-3 overflow-auto lg:grid-cols-2 lg:overflow-hidden">
-        <div className="flex min-h-0 flex-col gap-3">
+      <div className="grid min-h-0 flex-1 gap-4 pr-1 pb-1 overflow-auto lg:grid-cols-2 lg:overflow-hidden">
+        <div className="flex min-h-0 flex-col gap-4">
           <Panel className="min-h-40 flex-1">
             <div className="panel-header">
               <h2 className="panel-title">Token</h2>
-              <span className="font-mono text-[11px]">
-                <span className="text-danger">header</span>
-                <span className="text-faint">.</span>
-                <span className="text-tok-keyword">payload</span>
-                <span className="text-faint">.</span>
-                <span className="text-info">firma</span>
-              </span>
+              <span className="font-mono text-[11px] font-bold">header.payload.firma</span>
             </div>
             <textarea
               value={token}
@@ -164,12 +156,12 @@ export default function JwtTool() {
         </div>
 
         {ok ? (
-          <div className="grid min-h-0 gap-3 lg:grid-rows-[auto_1fr_auto]">
-            <Part title="Header" color="text-danger" data={ok.header} />
-            <Part title="Payload" color="text-tok-keyword" data={ok.payload} />
+          <div className="grid min-h-0 gap-4 lg:grid-rows-[auto_1fr_auto]">
+            <Part title="Header" data={ok.header} />
+            <Part title="Payload" data={ok.payload} />
             <Panel>
               <div className="panel-header">
-                <h2 className="panel-title text-info">Firma</h2>
+                <h2 className="panel-title">Firma</h2>
               </div>
               <code className="p-3 font-mono text-xs break-all text-muted">{ok.signature}</code>
             </Panel>

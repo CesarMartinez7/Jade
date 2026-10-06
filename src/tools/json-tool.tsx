@@ -89,8 +89,8 @@ export default function JsonTool() {
     setTree((prev) => ({ openDepth, generation: prev.generation + 1 }));
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 pb-20">
-      <ToolHeader title="JSON" hint="Valida, formatea y explora. Todo se procesa en tu navegador.">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <ToolHeader no="01" title="JSON" hint="Valida, formatea y explora. Todo se procesa en tu navegador.">
         <button type="button" className="btn btn-primary" onClick={jsonActions.format}>
           <Icon icon={iconIndent} width={14} /> Formatear
         </button>
@@ -121,7 +121,7 @@ export default function JsonTool() {
         </button>
       </ToolHeader>
 
-      <div className="grid min-h-0 flex-1 grid-rows-2 gap-3 lg:grid-cols-2 lg:grid-rows-1">
+      <div className="grid min-h-0 flex-1 grid-rows-2 gap-4 pr-1 pb-1 lg:grid-cols-2 lg:grid-rows-1">
         <Panel>
           <div className="panel-header">
             <h2 className="panel-title">Entrada</h2>
@@ -224,7 +224,7 @@ export default function JsonTool() {
               <EmptyState title="Sin datos todavía">
                 <button
                   type="button"
-                  className="text-fg underline underline-offset-2 hover:text-white"
+                  className="text-fg underline underline-offset-2 hover:text-accent"
                   onClick={() => setValue(EXAMPLE)}
                 >
                   Cargar un ejemplo

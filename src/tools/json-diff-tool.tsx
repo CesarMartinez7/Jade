@@ -110,8 +110,8 @@ export default function JsonDiffTool() {
   const hasInput = left !== "" || right !== "";
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 pb-20">
-      <ToolHeader title="Comparar JSON" hint="Diferencias estructurales, ignorando orden de claves y formato.">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <ToolHeader no="02" title="Comparar JSON" hint="Diferencias estructurales, ignorando orden de claves y formato.">
         <button
           type="button"
           className="btn"
@@ -136,7 +136,7 @@ export default function JsonDiffTool() {
         </button>
       </ToolHeader>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[1fr_1fr_1fr] gap-3 md:grid-cols-2 md:grid-rows-[3fr_2fr]">
+      <div className="grid min-h-0 flex-1 grid-rows-[1fr_1fr_1fr] gap-4 pr-1 pb-1 md:grid-cols-2 md:grid-rows-[3fr_2fr]">
         <Side title="Original" value={left} onChange={setLeft} valid={parsedLeft.ok} />
         <Side title="Modificado" value={right} onChange={setRight} valid={parsedRight.ok} />
 

@@ -1,48 +1,32 @@
 import type React from "react";
-import GradientText from "../reactbits/GradientText";
-import ShinyText from "../reactbits/ShinyText";
-import { Logo } from "../ui/logo";
 
 interface ToolHeaderProps {
+  /** Número de la herramienta en el índice, p. ej. "01". */
+  no: string;
   title: string;
   hint: string;
   children?: React.ReactNode;
 }
 
-export function ToolHeader({ title, hint, children }: ToolHeaderProps) {
+export function ToolHeader({ no, title, hint, children }: ToolHeaderProps) {
   return (
-    <header className="glass flex min-h-13 shrink-0 flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-4 py-2">
-      <div className="mr-auto flex min-w-0 items-center gap-2.5">
-        <Logo size={18} className="shrink-0" />
-        <GradientText
-          className="text-sm font-semibold tracking-tight"
-          colors={["#ffffff", "#8f8f8f", "#ffffff"]}
-          animationSpeed={6}
-        >
-          Jade
-        </GradientText>
-        <span className="text-faint" aria-hidden="true">
-          /
-        </span>
-        <h1 className="text-sm font-medium whitespace-nowrap">{title}</h1>
-        <span className="ml-2 hidden min-w-0 truncate text-xs lg:block">
-        <ShinyText
-          text={hint}
-          speed={4}
-          color="#707070"
-          shineColor="#ededed"
-        />
-        </span>
+    <header className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="mr-auto flex min-w-0 items-center gap-3">
+        <span className="sticker size-9 shrink-0 rounded-full font-mono text-xs">{no}</span>
+        <div className="min-w-0">
+          <h1 className="text-[30px] leading-none font-extrabold tracking-tight whitespace-nowrap">
+            {title}
+          </h1>
+          <p className="mt-1 hidden truncate text-xs font-medium opacity-70 2xl:block">{hint}</p>
+        </div>
       </div>
-
-      {children && <div className="flex flex-wrap items-center gap-1.5">{children}</div>}
-
+      {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </header>
   );
 }
 
 export function Divider() {
-  return <span className="mx-0.5 h-4 w-px bg-line-strong" aria-hidden="true" />;
+  return <span className="mx-0.5 h-5 w-0.5 rounded-full bg-ink" aria-hidden="true" />;
 }
 
 interface EmptyStateProps {
@@ -52,9 +36,9 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, children }: EmptyStateProps) {
   return (
-    <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-6 text-center">
-      <ShinyText text={title} speed={3} color="#8f8f8f" shineColor="#ffffff" className="text-sm" />
-      {children && <div className="text-xs text-faint">{children}</div>}
+    <div className="dotted flex h-full min-h-32 flex-col items-center justify-center gap-3 p-6 text-center">
+      <p className="sticker rounded-lg px-3 py-1.5 text-sm">{title}</p>
+      {children && <div className="rounded-md bg-bg px-2 py-0.5 text-xs text-muted">{children}</div>}
     </div>
   );
 }

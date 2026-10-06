@@ -95,7 +95,7 @@ const CodeEditor = ({
   const matches = find ? value.split(find).length - 1 : 0;
 
   return (
-    <div className="group relative flex h-full min-h-0 bg-black/25">
+    <div className="group relative flex h-full min-h-0">
       {/* Números de línea */}
       <div className="shrink-0 overflow-hidden border-r border-line select-none">
         <pre
@@ -137,7 +137,7 @@ const CodeEditor = ({
       </div>
 
       {replaceOpen ? (
-        <div className="absolute top-2 right-4 z-10 flex w-64 flex-col gap-1.5 rounded-lg border border-line-strong bg-raised p-2 shadow-xl shadow-black/40">
+        <div className="absolute top-2 right-4 z-10 flex w-64 flex-col gap-1.5 brutal rounded-lg bg-raised p-2">
           <div className="flex items-center gap-1">
             <input
               autoFocus
