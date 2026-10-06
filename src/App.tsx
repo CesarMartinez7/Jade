@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import "./App.css";
 import CommandPalette from "./shell/command-palette";
 import { TOOLS, type ToolId, toolFromHash } from "./shell/tools";
@@ -6,7 +6,12 @@ import { useUi } from "./stores/ui";
 import { Icon } from "./ui/icons";
 import { Logo } from "./ui/logo";
 
+// Página personal fuera del índice de herramientas: solo se llega por /#carolina.
+const CarolinaPage = lazy(() => import("./pages/carolina"));
+const isCarolina = () => window.location.hash === "#carolina";
+
 const App = () => {
+  const [carolina, setCarolina] = useState(isCarolina);
   const [active, setActive] = useState<ToolId>(toolFromHash);
   // Las herramientas visitadas quedan montadas para no perder lo que se escribió.
   const [visited, setVisited] = useState<ToolId[]>([active]);
@@ -24,7 +29,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const handleHashChange = () => selectTool(toolFromHash());
+    const handleHashChange = () => {
+      setCarolina(isCarolina());
+      if (!isCarolina()) selectTool(toolFromHash());
+    };
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -38,6 +46,14 @@ const App = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectTool, togglePalette]);
+
+  if (carolina) {
+    return (
+      <Suspense fallback={null}>
+        <CarolinaPage />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col gap-4 p-4 md:flex-row">
