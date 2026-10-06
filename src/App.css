@@ -163,6 +163,10 @@
     box-shadow: 0 0 0 var(--color-shadow);
   }
 
+  .btn[aria-pressed="true"] {
+    @apply bg-fg text-bg;
+  }
+
   .btn-primary {
     @apply bg-pink text-onfill;
   }

@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { iconBraces, iconDiff, iconFileDiff, iconKey } from "../ui/icons";
+import { iconBraces, iconDiff, iconFileDiff, iconKey, iconRegex } from "../ui/icons";
 
 export const TOOLS = [
   {
@@ -29,6 +29,13 @@ export const TOOLS = [
     description: "Decodificar tokens",
     icon: iconKey,
     component: lazy(() => import("../tools/jwt-tool")),
+  },
+  {
+    id: "regex",
+    label: "Regex",
+    description: "Probar expresiones regulares",
+    icon: iconRegex,
+    component: lazy(() => import("../tools/regex-tool")),
   },
 ] as const;
 

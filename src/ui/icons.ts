@@ -17,6 +17,7 @@ export { default as iconFileDiff } from "@iconify-icons/tabler/file-diff";
 export { default as iconIndent } from "@iconify-icons/tabler/indent-increase";
 export { default as iconKey } from "@iconify-icons/tabler/key";
 export { default as iconLink } from "@iconify-icons/tabler/link";
+export { default as iconRegex } from "@iconify-icons/tabler/regex";
 export { default as iconReplace } from "@iconify-icons/tabler/replace";
 export { default as iconSearch } from "@iconify-icons/tabler/search";
 export { default as iconTable } from "@iconify-icons/tabler/table";
