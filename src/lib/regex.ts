@@ -282,8 +282,8 @@ export function toCode(pattern: string, flags: string, language: Language): stri
 
 export const SAMPLE_TEXT = `Pedido #1042 del 2026-10-06 por $350.000
 Pedido #1043 del 2026-10-07 por $89.900
-Contacto: cesar@red5g.co, tel 300 123 4567
-Web: https://red5g.co/soporte desde 192.168.1.20
+Contacto: cesarwamartinez@gmail.com, tel 300 123 4567
+Web: https://ejemplo.com/soporte desde 192.168.1.20
 Sesión 3f2b8c1e-9a4d-4e7b-8c21-5d6f7a8b9c0d
 Colores: #7be3b5, #FFD84D y #111
 <a href="/inicio">Inicio</a> <strong>Jade</strong>
