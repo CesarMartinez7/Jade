@@ -7,6 +7,7 @@ import {
   Card,
   CardBody,
   CardHeader,
+  ConfirmDialog,
   cx,
   Divider,
   Field,
@@ -15,6 +16,10 @@ import {
   Kbd,
   Magnet,
   Marquee,
+  Modal,
+  ModalBody,
+  ModalClose,
+  ModalHeader,
   Panel,
   PanelBody,
   PanelHeader,
@@ -139,6 +144,10 @@ export default function JadeComponentsPage() {
   const [tab, setTab] = useState("json");
   const [night, setNight] = useState(true);
   const [progress, setProgress] = useState(64);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   return (
     <div className="min-h-full">
@@ -424,6 +433,145 @@ export default function JadeComponentsPage() {
               tone="lilac"
               striped
             />
+          </Specimen>
+
+          <SectionTitle>Modales</SectionTitle>
+          <Specimen
+            name="Modal"
+            description="Diálogo con cabecera de color, cuerpo y pie de acciones"
+            tone="mint"
+            wide
+            code={`<Modal
+  open={open}
+  onClose={close}
+  title="Guardar cambios"
+  footer={
+    <>
+      <Button variant="ghost" onClick={close}>Cancelar</Button>
+      <Button variant="primary">Guardar</Button>
+    </>
+  }
+>
+  <p>Los cambios se aplican solo en tu navegador.</p>
+</Modal>`}
+          >
+            <Button variant="primary" onClick={() => setModalOpen(true)}>
+              Abrir modal
+            </Button>
+            <Modal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              title="Guardar cambios"
+              size="sm"
+              tone="mint"
+              footer={
+                <>
+                  <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button variant="primary" onClick={() => setModalOpen(false)}>
+                    Guardar
+                  </Button>
+                </>
+              }
+            >
+              <p className="mb-3">
+                Los cambios se aplican solo en tu navegador, nada sale de tu equipo.
+              </p>
+              <Field label="Nombre del proyecto" hint="Visible solo para ti">
+                <Input defaultValue="Jade" />
+              </Field>
+            </Modal>
+          </Specimen>
+
+          <Specimen
+            name="Modal · cabecera propia"
+            description="Composición libre con ModalHeader, ModalBody y ModalClose"
+            tone="pink"
+            wide
+            code={`<Modal open={open} onClose={close} ariaLabel="Buscador" size="md">
+  <ModalHeader>
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <input placeholder="Filtrar…" />
+      <kbd>Esc</kbd>
+    </div>
+    <ModalClose />
+  </ModalHeader>
+  <ModalBody className="p-1.5">…</ModalBody>
+</Modal>`}
+          >
+            <Button icon={iconSearch} onClick={() => setSearchOpen(true)}>
+              Abrir buscador
+            </Button>
+            <Modal
+              open={searchOpen}
+              onClose={() => setSearchOpen(false)}
+              ariaLabel="Buscador de ejemplos"
+              size="md"
+            >
+              <ModalHeader>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Icon icon={iconSearch} width={16} className="shrink-0 text-faint" />
+                  <input
+                    autoFocus
+                    placeholder="Filtrar elementos…"
+                    aria-label="Filtrar elementos"
+                    className="h-9 min-w-0 flex-1 bg-transparent text-sm placeholder:text-faint focus:outline-none"
+                  />
+                  <kbd>Esc</kbd>
+                </div>
+                <ModalClose />
+              </ModalHeader>
+              <ModalBody className="p-1.5">
+                <ul>
+                  {TYPE_WORDS.map((item) => (
+                    <li
+                      key={item}
+                      className="cursor-pointer rounded-lg border-2 border-transparent px-3 py-2 text-sm font-semibold hover:border-ink hover:bg-yellow"
+                      onClick={() => setSearchOpen(false)}
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </ModalBody>
+            </Modal>
+          </Specimen>
+
+          <Specimen
+            name="ConfirmDialog"
+            description="Confirmación destructiva lista para usar"
+            tone="lilac"
+            code={`<ConfirmDialog
+  open={open}
+  onClose={close}
+  onConfirm={remove}
+  title="¿Eliminar datos?"
+  confirmLabel="Eliminar"
+>
+  Esta acción no se puede deshacer.
+</ConfirmDialog>`}
+          >
+            <Button
+              variant="danger"
+              icon={iconTrash}
+              onClick={() => {
+                setConfirmed(false);
+                setConfirmOpen(true);
+              }}
+            >
+              Eliminar datos
+            </Button>
+            {confirmed && <Badge tone="ok">confirmado</Badge>}
+            <ConfirmDialog
+              open={confirmOpen}
+              onClose={() => setConfirmOpen(false)}
+              onConfirm={() => setConfirmed(true)}
+              title="¿Eliminar datos?"
+              confirmLabel="Eliminar"
+            >
+              Se borrarán los datos de ejemplo. Esta acción no se puede deshacer.
+            </ConfirmDialog>
           </Specimen>
 
           <SectionTitle>Alfabeto</SectionTitle>

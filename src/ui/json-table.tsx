@@ -1,9 +1,13 @@
 import { useMemo } from "react";
+import { Table, type TableColumn } from "../jade";
 import type { JsonValue } from "../lib/json";
 
 const MAX_ROWS = 500;
+const INDEX_KEY = "__row_index__";
 
-function isRecord(value: JsonValue): value is { [key: string]: JsonValue } {
+type Row = Record<string, JsonValue>;
+
+function isRecord(value: JsonValue): value is Row {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -18,17 +22,38 @@ function Cell({ value }: { value: JsonValue | undefined }) {
 
 export default function JsonTable({ data }: { data: JsonValue }) {
   const { columns, rows } = useMemo<{
-    columns: string[];
-    rows: Record<string, JsonValue>[];
+    columns: TableColumn<Row>[];
+    rows: Row[];
   }>(() => {
     const list = Array.isArray(data) ? data : [data];
     if (!list.every(isRecord)) {
-      return { columns: ["valor"], rows: list.map((item) => ({ valor: item })) };
+      return {
+        columns: [{ key: "valor", header: "valor", render: (row) => <Cell value={row.valor} /> }],
+        rows: list.map((item) => ({ valor: item })),
+      };
     }
     // Unión de claves: las filas no tienen por qué compartir la misma forma.
     const keys = new Set<string>();
     for (const row of list) for (const key of Object.keys(row)) keys.add(key);
-    return { columns: [...keys], rows: list };
+    return {
+      columns: [
+        {
+          key: INDEX_KEY,
+          header: "#",
+          align: "right",
+          className: "font-mono text-faint",
+          render: (_row, index) => index + 1,
+        },
+        ...[...keys].map((key) => ({
+          key,
+          header: key,
+          sortable: true,
+          className: "max-w-80 truncate font-mono",
+          render: (row: Row) => <Cell value={row[key]} />,
+        })),
+      ],
+      rows: list as Row[],
+    };
   }, [data]);
 
   if (rows.length === 0) {
@@ -36,40 +61,22 @@ export default function JsonTable({ data }: { data: JsonValue }) {
   }
 
   return (
-    <>
-      <table className="w-full border-collapse font-mono text-xs">
-        <thead className="sticky top-0 z-10 bg-raised text-left text-muted">
-          <tr>
-            <th className="w-10 border-b border-line px-2 py-1.5 text-right font-normal text-faint">#</th>
-            {columns.map((column) => (
-              <th key={column} className="border-b border-l border-line px-2 py-1.5 font-medium whitespace-nowrap">
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.slice(0, MAX_ROWS).map((row, i) => (
-            <tr key={i} className="hover:bg-hover/60">
-              <td className="border-b border-line px-2 py-1 text-right text-faint">{i + 1}</td>
-              {columns.map((column) => (
-                <td
-                  key={column}
-                  className="max-w-80 truncate border-b border-l border-line px-2 py-1"
-                  title={typeof row[column] === "object" ? undefined : String(row[column] ?? "")}
-                >
-                  <Cell value={row[column]} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="p-3">
+      <Table
+        className="w-full"
+        columns={columns}
+        rows={rows.slice(0, MAX_ROWS)}
+        rowKey={(_row, index) => index}
+        tone="yellow"
+        striped
+        compact
+        empty="Sin filas"
+      />
       {rows.length > MAX_ROWS && (
         <p className="p-3 text-center text-xs text-faint">
           Mostrando {MAX_ROWS} de {rows.length} filas.
         </p>
       )}
-    </>
+    </div>
   );
 }

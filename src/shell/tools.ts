@@ -1,5 +1,13 @@
 import { lazy } from "react";
-import { iconBraces, iconDiff, iconFileDiff, iconKey, iconPalette, iconRegex } from "../ui/icons";
+import {
+  iconBraces,
+  iconDiff,
+  iconFileDiff,
+  iconKey,
+  iconPalette,
+  iconQrcode,
+  iconRegex,
+} from "../ui/icons";
 
 export const TOOLS = [
   {
@@ -43,6 +51,13 @@ export const TOOLS = [
     description: "Convertir y comprobar contraste",
     icon: iconPalette,
     component: lazy(() => import("../tools/color-tool")),
+  },
+  {
+    id: "qr",
+    label: "QR",
+    description: "Generar códigos QR",
+    icon: iconQrcode,
+    component: lazy(() => import("../tools/qr-tool")),
   },
 ] as const;
 

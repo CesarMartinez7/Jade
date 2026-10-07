@@ -34,4 +34,19 @@ export {
   type TableTone,
 } from "./Table";
 export { StickerWord } from "../ui/sticker-word";
+export {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+  ModalClose,
+  ConfirmDialog,
+  type ModalProps,
+  type ModalTone,
+  type ModalSize,
+  type ModalHeaderProps,
+  type ModalCloseProps,
+  type ConfirmDialogProps,
+} from "./Modal";
 export { cx } from "./cx";
