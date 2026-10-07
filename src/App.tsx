@@ -6,12 +6,15 @@ import { useUi } from "./stores/ui";
 import { Icon } from "./ui/icons";
 import { Logo } from "./ui/logo";
 
-// Página personal fuera del índice de herramientas: solo se llega por /#carolina.
+// Páginas fuera del índice de herramientas (solo por hash).
 const CarolinaPage = lazy(() => import("./pages/carolina"));
+const JadeComponentsPage = lazy(() => import("./pages/jade-components"));
 const isCarolina = () => window.location.hash === "#carolina";
+const isJade = () => window.location.hash === "#jade";
 
 const App = () => {
   const [carolina, setCarolina] = useState(isCarolina);
+  const [jade, setJade] = useState(isJade);
   const [active, setActive] = useState<ToolId>(toolFromHash);
   // Las herramientas visitadas quedan montadas para no perder lo que se escribió.
   const [visited, setVisited] = useState<ToolId[]>([active]);
@@ -30,8 +33,11 @@ const App = () => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCarolina(isCarolina());
-      if (!isCarolina()) selectTool(toolFromHash());
+      const carolina = isCarolina();
+      const jade = isJade();
+      setCarolina(carolina);
+      setJade(jade);
+      if (!carolina && !jade) selectTool(toolFromHash());
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -51,6 +57,14 @@ const App = () => {
     return (
       <Suspense fallback={null}>
         <CarolinaPage />
+      </Suspense>
+    );
+  }
+
+  if (jade) {
+    return (
+      <Suspense fallback={null}>
+        <JadeComponentsPage />
       </Suspense>
     );
   }
@@ -105,6 +119,10 @@ const App = () => {
             <span className="hidden md:inline">Tema</span>
             <span>{theme === "dia" ? "☀ Día" : "☾ Noche"}</span>
           </button>
+          <a href="#jade" className="btn justify-between">
+            <span className="hidden md:inline">Jade</span>
+            <span>Componentes</span>
+          </a>
           <p className="hidden pt-1 text-[11px] leading-4 font-medium text-muted md:block">
             100% local: nada de lo que pegues sale de tu navegador.
           </p>

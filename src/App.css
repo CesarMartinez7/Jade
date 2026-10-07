@@ -279,6 +279,56 @@
   color: var(--color-tok-punct);
 }
 
+/* ── Animaciones de componentes ──────────────────────────────────────────── */
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee var(--marquee-duration, 20s) linear infinite;
+}
+
+.marquee-track[data-reverse="true"] {
+  animation-direction: reverse;
+}
+
+.marquee:hover .marquee-track[data-pause="true"] {
+  animation-play-state: paused;
+}
+
+@keyframes tw-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.tw-caret {
+  animation: tw-blink 1s step-end infinite;
+}
+
+@keyframes shiny {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.shiny-text {
+  background: linear-gradient(
+    120deg,
+    var(--color-fg) 40%,
+    var(--color-mint) 50%,
+    var(--color-fg) 60%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shiny linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
